@@ -1,3 +1,3 @@
 release: python manage.py migrate
-web: gunicorn market.wsgi
+web: gunicorn dotolist.wsgi
 python manage.py runserver
