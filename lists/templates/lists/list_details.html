@@ -92,7 +92,7 @@
               url: "{% url 'get_tasks' pk=lista.pk %}",
               success: function(data){
                   $('#tasks_list').empty();
-                  if (data.tasks){
+                  if (data.tasks.length !=0){
                     $('table').show();
                   };
                   let periorities = {'1':'low','2':'middle','3':'high'}
