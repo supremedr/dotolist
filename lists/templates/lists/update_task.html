@@ -1,0 +1,19 @@
+<form id='edit_task_form' method="post">{% csrf_token %}
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title">
+    <label for="details">Details:</label>
+    <input type="text" id="details" name="details">
+    <label for="periority">Periority:</label>
+                        
+    <select name="periority" id="periority">
+        <option value="1">low</option>
+
+        <option value="2">medium</option>
+
+        <option value="3">high</option>
+
+</select>
+
+    <input type="submit" value="Save">
+</form>
+

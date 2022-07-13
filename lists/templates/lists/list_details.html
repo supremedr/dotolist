@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<section class="vh-100" style="background-color: #eee;">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col col-lg-9 col-xl-7">
+        <div class="card rounded-3">
+          <div class="card-body p-4">
+
+            {% comment %} display list name {% endcomment %}
+            <h4 class="text-center my-3 pb-3">
+              {{lista.title}} <a href='{% url "update_list" pk=lista.pk %}'><button class="btn btn-warning">Edit</button></a>
+              <button id='list_delete' class="btn btn-danger">Delete</button></h4>
+            
+              <form id= 'list_delete_form' method="POST" hidden action="{% url 'delete_list' pk=lista.pk %}" class="row row-cols-lg-auto g-3 justify-content-center align-items-center mb-4 pb-2">
+                <div class="col-12">
+                {% csrf_token %}<input type="submit" value="Confirm" class="form-control">
+                </div>
+             </form>
+
+              {% comment %} Add new task {% endcomment %}
+            <button id='add_task_button' class="btn btn-warning" >Add task</button>
+              <form hidden id='task_form' action="" method="post" class="row row-cols-lg-auto g-3 justify-content-center align-items-center mb-4 pb-2">
+              {% csrf_token %}
+              <div class="col-12">
+                <div class="form-outline">
+                  <label for="title" class="form-label">Enter a task here</label>
+                  <input type="text" id="title" name="title" class="form-control">
+                  <label for="details" class="form-label">Details:</label>
+                  <input type="text" id="details" name="details" class="form-control">
+                  <label for="periority" class="form-label">Periority:</label>
+                                      
+                  <select name="periority" id="periority" class="form-control">
+                      <option value="1">low</option>
+              
+                      <option value="2">medium</option>
+              
+                      <option value="3">high</option>
+              
+              </select>
+              
+                </div>
+              </div>
+
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+
+            </form>
+            
+            <table hidden class="table mb-4">
+              <thead>
+                <tr>
+                  <th scope="col">Task</th>
+                  <th scope="col">Details</th>
+                  <th scope="col">Periority</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id='tasks_list'>
+
+              </tbody>
+            </table>
+
+            <div hidden id='task_delete_div'>
+              <p>Are you sure you want to delete this task?</p>
+              <form id= 'task_delete_form' pk='' method="POST" action="">
+                  {% csrf_token %}<input type="submit" value="Confirm">
+               </form>
+               <button id='cancel'>Cancel</button>
+              </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    {% comment %} jQuery  {% endcomment %}
+
+<script>
+  $(document).ready(function(){
+
+      {% comment %} continuous update of tasks status {% endcomment %}
+      setInterval(function(){
+          $.ajax({
+              type: 'GET',
+              url: "{% url 'get_tasks' pk=lista.pk %}",
+              success: function(data){
+                  $('#tasks_list').empty();
+                  if (data.tasks){
+                    $('table').show();
+                  };
+                  let periorities = {'1':'low','2':'middle','3':'high'}
+                  for (var task in data.tasks){
+                      var done_url_mask = "{% url 'toggle_done' pk=12345 %}".replace(/12345/, data.tasks[task].id )
+                      var update_url_mask = "{% url 'update_task' pk=12345 %}".replace(/12345/, data.tasks[task].id )
+                      var periority = periorities[data.tasks[task].periority]
+                      var temp = `<tr>
+                          <th id='task_edit' href= "${update_url_mask}" pk=${data.tasks[task].id}
+                          scope="row">${data.tasks[task].title}</th>
+                          <td>${data.tasks[task].details}</td>
+                          <td>${periority}</td>
+                          <td>${data.tasks[task].done? 'Done': 'Not done'}</td>
+                          <td>
+                            <button type="submit" class="btn btn-success ms-1" id='toggle_done' href= "${done_url_mask}" >`
+                      if (data.tasks[task].done == false){
+                          temp = temp + `Done</button>`
+                      }else{
+                          temp = temp + `Not done</button>`
+                      };
+                      temp += `<button type="submit" class="btn btn-danger" id='task_delete' pk="${data.tasks[task].id}">Delete</button>
+                    </td>
+                  </tr>`
+                       $('#tasks_list').append(temp);
+                  };
+              },
+          });
+      },1000);
+
+      {% comment %} change 'done' status of a task {% endcomment %}
+      $('#tasks_list').on('click','#toggle_done',function(){
+        $.ajax({
+              type: 'GET',
+              url: $(this).attr('href'),
+              {% comment %} success: function(data){
+                console.log(data)
+              } {% endcomment %}
+          });   
+      });
+
+      {% comment %} showing add task form {% endcomment %}
+      $('#add_task_button').click(function(){
+          $('#task_form').show();
+          $('#task_form').attr('action',"{% url 'new_task' %}");
+
+      });
+
+      {% comment %} show task edit form {% endcomment %}
+      $('#tasks_list').on('click','#task_edit',function(){
+          $('#task_form').show();
+          $('#task_form').attr('action',$(this).attr('href'));
+          $.ajax({
+              type: 'get',
+              url: $(this).attr('href'),
+              {% comment %} data: {
+                  pk: $(this).attr('pk'),
+              }, {% endcomment %}
+              success: function(data){
+                  var task= data;
+                  $('#task_form >>> #title').attr('value',task.title);
+                  $('#task_form >>> #details').attr('value',task.details);
+                  $('#task_form >>> #periority > option[value='+task.periority+']').attr('selected','selected');
+              }
+
+          });
+      });
+
+      {% comment %} submit add/edit task form {% endcomment %}
+      $('#task_form').submit(function(e){
+          e.preventDefault();
+          $.ajax({
+              type: 'POST',
+              url: $(this).attr('action'),
+              data: {
+                  pk: {{lista.pk}},
+                  title: $('#title').val(),
+                  details: $('#details').val(),
+                  periority: $('#periority').val(),
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+              },
+              success: function(data){
+                  if (data.done){
+                    $( '#task_form' ).each(function(){
+                      this.reset();
+                  });
+                  };
+              },
+          });
+      });
+
+      {% comment %} showing list delete confirmation form/button {% endcomment %}
+      $('#list_delete').click(function(){
+          $('#list_delete_form').toggle();
+          $(this).text(function(i, text){
+              return text === "Delete" ? "DON'T DELETE" : "Delete";
+          })
+      });
+
+      {% comment %} showing task delete confirmation form {% endcomment %}
+      $('#tasks_list').on('click','#task_delete',function(){
+          var id = $(this).attr('pk');
+          var form = $("form[id= 'task_delete_form']");
+          $(form).attr('pk',id);
+          $(form).attr('action',"{% url 'delete_task' pk=12345 %}".replace(/12345/,id));
+          $('#task_delete_div').toggle();
+      });
+
+      {% comment %} submit task delete form {% endcomment %}
+      $('#task_delete_div').on('submit','#task_delete_form',function(e){
+          e.preventDefault();
+          $('#task_delete_div').toggle();
+          $.ajax({
+              type: 'POST',
+              url: $(this).attr('action'),
+              data: {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+              },
+              success: function(data){
+                  if (data.done){
+                      console.log('done');
+                  };
+              },
+          });
+      });
+
+      {% comment %} cancel task delete {% endcomment %}
+      $('#cancel').click(function(){
+          $('#task_delete_div').toggle();
+      })
+
+  });
+</script>
+
+{% endblock %}

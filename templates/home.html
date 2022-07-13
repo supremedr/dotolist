@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block logged_in_nav %} 
+
+{% endblock %}
+{% block content %}
+<div>
+    <a href="{% url "new_list" %}">Create Doto lists!</a>
+</div>
+<ul>
+{% for lista in listas %}
+<li>
+    <a href="{% url "view_list" pk=lista.pk %}">{{ lista.title }}</a>
+    <a href="{% url "update_list" pk=lista.pk %}">Edit</a> 
+    <button id='list_delete' pk={{lista.pk}}>Delete</button>
+    <form id= 'list_delete_form' pk='form {{lista.pk}}' method="POST" hidden action="{% url 'delete_list' pk=lista.pk %}">
+        {% csrf_token %}<input type="submit" value="Confirm">
+     </form>
+</li>
+</ul>
+<script>
+
+    $('button').click(function(){
+        console.log('click')
+        var id = $(this).attr('pk');
+        var form = $("form[pk = 'form "+id+"']");
+        $(form).toggle();
+        $(this).text(function(i, text){
+            return text === "Delete" ? "DON'T DELETE" : "Delete";
+        });
+    });
+
+</script>
+
+{% endfor %} {% endblock %}
