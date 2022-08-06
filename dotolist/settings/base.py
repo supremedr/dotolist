@@ -13,17 +13,25 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '&xkz%@a-+)7k5p4bpc%_m!pz4p=o1-wjgd%kx+(erk2-0vlb5q'
+from django.core.exceptions import ImproperlyConfigured
+def get_env_variable(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = 'Set the {} environment variable'.format(var_name)
+        raise ImproperlyConfigured(error_msg)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = get_env_variable('secret_key')
+
+
 
 ALLOWED_HOSTS = []
 
@@ -129,7 +137,4 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-# Configure Django App for Heroku.
-import django_heroku
-django_heroku.settings(locals())
+ 
