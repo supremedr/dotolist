@@ -29,7 +29,7 @@ def get_env_variable(var_name):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '&xkz%@a-+)7k5p4bpc%_m!pz4p=o1-wjgd%kx+(erk2-0vlb5q'
+SECRET_KEY = get_env_variable('secret_key')
 
 
 
